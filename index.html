@@ -275,6 +275,13 @@
 </div></div>
 
 <script>
+   window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('authenticated') === 'true') {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('map-container').style.display = 'block';
+    initializeMap();
+  }
+});
      const CORRECT_PASSWORD = "fue25";
 let map;
 
