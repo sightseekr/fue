@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Ultimate Map: Fuerteventura</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+  <style>
+     @import url('https://fonts.googleapis.com/css2?family=Avenir:wght@300;400&family=Brandon+Grotesque:wght@400;700&display=swap');
+
+/* Login page styles */
+#login-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #FFFEFC, #FADBD8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.login-container {
+  text-align: center;
+  background: #FFFEFC;
+  padding: 30px;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  max-width: 420px;
+  width: 90%;
+}
+
+.login-logo {
+  width: 100%;
+  max-width: 370px;
+  height: auto;
+  margin-bottom: 0px;
+}
+
+.login-container h2 {
+  font-family: 'Brandon Grotesque', sans-serif;
+  font-size: 1.8em;
+  margin-bottom: 10px;
+  color: #444454;
+}
+
+.login-subtitle {
+  font-size: 1em;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+#password {
+  width: 100%;
+  padding: 14px 18px;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid #F5B9B4;
+  background-color: #FFFEFC;
+  font-size: 1em;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+#password:focus {
+  border-color: #EA736B;
+}
+
+#login-btn {
+  background-color: #EA736B;
+  color: white;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: 'Avenir', sans-serif;
+  font-weight: bold;
+  font-size: 1em;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+#login-btn:hover {
+  background-color: #EF968F;
+  transform: scale(1.03);
+}
+
+#error {
+  color: #EA736B;
+  font-style: italic;
+  margin-top: 10px;
+  display: none;
+}
+    body { margin: 0; padding: 0; font-family: sans-serif; }
+    #map-container { display: none; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .mapboxgl-popup-content {
+      background-color: rgba(255, 255, 255, 1) !important;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: sans-serif;
+      max-width: 220px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+    }
+    .custom-popup strong {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .custom-popup p {
+      font-size: 0.85em;
+      font-style: italic;
+      margin: 0 0 6px;
+    }
+    .custom-popup .directions-btn,
+    .custom-popup .mark-visited-btn {
+      all: unset;
+      background-color: #f5d41c;
+      color: white;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 0.85em;
+      display: inline-flex;
+      align-items: center;
+      min-height: 25px;
+      max-height: 26px;
+      gap: 5px;
+      text-decoration: none;
+    }
+    .custom-popup .directions-btn:hover {
+      background-color: #c59a00;
+    }
+    #search-container {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 90%;
+      max-width: 400px;
+    }
+    #search {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    #suggestions {
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      max-height: 200px;
+      overflow-y: auto;
+      position: absolute;
+      width: 100%;
+      z-index: 2;
+    }
+    .suggestion {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .suggestion:hover {
+      background: #f0f0f0;
+    }
+    .no-results {
+      padding: 8px 12px;
+      color: #666;
+      font-style: italic;
+    }
+    #layer-toggle {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 0.9em;
+  z-index: 2;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+#layer-toggle h3 {
+  margin: 0 0 8px;
+  font-size: 1em;
+}
+#layer-toggle label {
+  display: block;
+  cursor: pointer;
+}
+#layer-toggle label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 6px;
+}
+
+#layer-toggle .legend-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+.icon {
+  display: inline-block;
+  background-image: url('https://api.mapbox.com/styles/v1/sightseekr/cmifz6nw500o101pf7wx37y7o/sprite.png?access_token=pk.eyJ1Ijoic2lnaHRzZWVrciIsImEiOiJjbWgxdmNsZ2owc3h2MDhxcGdiZno4c3ptIn0.ODNk5NVKUxNh0b9QoL5tqQ');
+  background-repeat: no-repeat;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Example numbers — update from your JSON */
+.icon-beach {
+  background-position: -324px -266px;
+  width: 20px;
+  height: 20px;
+}
+
+.icon-restaurant {
+  background-position: -40px -386px;
+  width: 20px;
+  height: 20px;
+}
+
+.icon-bar {
+  background-position: -264px -266px;
+  width: 20px;
+  height: 20px;
+}
+
+.icon-attraction {
+  background-position: -328px -245px;
+  width: 20px;
+  height: 20px;
+}
+  </style>
+</head>
+<body>
+    <!-- Login Page -->
+<div id="login-page">
+  <div class="login-container">
+    <img 
+      src="https://static.wixstatic.com/media/eb9535_9d1043c625be4e6882a9bc0ad92f3463~mv2.png/v1/crop/x_0,y_598,w_1500,h_338/fill/w_1200,h_270,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/MTM%20Thin%20Pink.png" 
+      alt="Logo" 
+      class="login-logo" 
+    />
+    <h2>Welcome, explorer!</h2>
+    <p class="login-subtitle">This map is password protected</p>
+    <form id="login-form">
+      <input type="password" id="password" placeholder="Enter password" />
+      <button type="submit" id="login-btn">Enter</button>
+    </form>
+    <p id="error">Incorrect password</p>
+  </div>
+</div>
+<div id="map-container">
+<div id="map"></div>
+<div id="search-container">
+  <input type="text" id="search" placeholder="Find a Sightseekr recommendation in Fuerteventura..." />
+  <div id="suggestions"></div>
+</div>
+<div id="layer-toggle">
+  <h3>Sightseekr Recommended...</h3>
+  <label><input type="checkbox" id="toggle-sightseeing" checked> <span class="icon icon-attraction"></span> Sightseeing</label><br>
+  <label><input type="checkbox" id="toggle-restaurants" checked> <span class="icon icon-restaurant"></span> Restaurants</label><br>
+  <label><input type="checkbox" id="toggle-bars" checked> <span class="icon icon-bar"></span> Bars</label><br>
+  <label><input type="checkbox" id="toggle-beaches" checked> <span class="icon icon-beach"></span> Beaches & Nature</label>
+</div></div>
+
+<script>
+     const CORRECT_PASSWORD = "fue25";
+let map;
+
+// Login handler
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const input = document.getElementById('password').value;
+  
+  if (input === CORRECT_PASSWORD) {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('map-container').style.display = 'block';
+    initializeMap();
+  } else {
+    document.getElementById('error').style.display = 'block';
+  }
+});
+    function initializeMap() {
+  mapboxgl.accessToken = 'pk.eyJ1Ijoic2lnaHRzZWVrciIsImEiOiJjbWgxdmNsZ2owc3h2MDhxcGdiZno4c3ptIn0.ODNk5NVKUxNh0b9QoL5tqQ';
+
+    map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/sightseekr/cmifz6nw500o101pf7wx37y7o',
+    center: [-14.147049, 28.535013],
+    zoom: 8.5
+  });
+
+  map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+  map.addControl(new mapboxgl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true },
+    trackUserLocation: true,
+    showUserHeading: true
+}), 'bottom-right');
+
+ const savedPoints = [
+  { 
+    name: "Corralejo Natural Park",
+    tags: ["nature", "sand dunes", "beach", "views", "walking", "kitesurfing"],
+    coordinates: [-13.8506, 28.68301],
+    description: "Vast sand dunes that look like the Sahara, meeting turquoise Atlantic waters. Great for photos, walks, and kitesurfing"
+  },
+  { 
+    name: "Ajuy Caves",
+    tags: ["caves", "beach", "nature", "volcanic", "scenic"],
+    coordinates: [-14.1555, 28.40351],
+    description: "Black-sand beach and impressive sea caves formed by ancient lava flows."
+  },
+  { 
+    name: "La Concha Beach",
+    tags: ["beach", "sunset", "swimming", "scenic"],
+    coordinates: [-14.01618, 28.69438],
+    description: "A stunning beach near El Cotillo with beautiful views at sunset."
+  },
+  { 
+    name: "Cofete Beach",
+    tags: ["beach", "remote", "nature", "scenic", "mountains"],
+    coordinates: [-14.37991, 28.11322],
+    description: "A beautiful remote beach close to the island’s highest peak, Pico de la Zarza"
+  },
+  { 
+    name: "Pico de la Zarza",
+    tags: ["mountain", "hiking", "viewpoint", "nature"],
+    coordinates: [-14.35555, 28.10194],
+    description: "The island’s highest peak, offering views over Jandía."
+  },
+  { 
+    name: "Flag Beach",
+    tags: ["beach", "watersports", "surfing", "kitesurfing"],
+    coordinates: [-13.83966, 28.70871],
+    description: "The perfect beach for watersports, especially surf lessons!"
+  },
+  { 
+    name: "Sotavento Beach",
+    tags: ["beach", "kitesurfing", "windsurfing", "nature", "sport"],
+    coordinates: [-14.26594, 28.10939],
+    description: "This is the beach where you’ll find world-class wind and kite surfing, especially spectacular during the annual World Championships."
+  },
+  { 
+    name: "Playa del Matorral",
+    tags: ["beach", "relaxing", "restaurants", "family"],
+    coordinates: [-14.33518, 28.04461],
+    description: "A large sandy beach in the area of Morro Jable, perfect for a chill day close to lots of bars and restaurants."
+  },
+  { 
+    name: "Calderón Hondo Volcano",
+    tags: ["volcano", "hiking", "nature", "viewpoint"],
+    coordinates: [-13.91998, 28.70034],
+    description: "You can hike to the top of this volcano for panoramic crater views."
+  },
+  { 
+    name: "Playa del Castillo",
+    tags: ["beach", "resort", "family"],
+    coordinates: [-13.85604, 28.39537],
+    description: "The main beach in Caleta de Fuste, close to the centre of the resort."
+  },
+  { 
+    name: "Grandes Playas Corralejo",
+    tags: ["beach", "nature", "scenic", "swimming"],
+    coordinates: [-13.8418, 28.71794],
+    description: "A huge stretch of beach with clear, blue water, in the Corralejo area."
+  },
+
+  // ---------------- SIGHTSEEING ----------------
+
+  { 
+    name: "Betancuria",
+    tags: ["historic", "village", "culture", "views"],
+    coordinates: [-14.0573, 28.42487],
+    description: "The island’s historic capital, a charming village with whitewashed houses, cobblestone streets, and mountain views."
+  },
+  { 
+    name: "El Cotillo",
+    tags: ["town", "beach", "surf", "relaxing"],
+    coordinates: [-14.01086, 28.68555],
+    description: "A relaxed surf town with beautiful lagoons such as La Concha Beach, perfect for swimming and sunset views."
+  },
+  { 
+    name: "Lobos Island",
+    tags: ["island", "nature", "hiking", "lighthouse", "protected"],
+    coordinates: [-13.82452, 28.75143],
+    description: "Protected island with volcanic trails, lagoons, and a small lighthouse."
+  },
+  { 
+    name: "Salt Museum (Museo de la Sal)",
+    tags: ["museum", "culture", "history", "village"],
+    coordinates: [-13.86989, 28.36756],
+    description: "Found in the village of Las Salinas del Carmen, this museum explains the island’s salt-harvesting heritage."
+  },
+  { 
+    name: "Gran Tarajal",
+    tags: ["town", "port", "local vibe", "colourful"],
+    coordinates: [-14.02029, 28.2148],
+    description: "Lively port town with colourful houses and a local vibe."
+  },
+  { 
+    name: "Pozo Negro",
+    tags: ["village", "coastal", "quiet", "volcanic"],
+    coordinates: [-13.89586, 28.32378],
+    description: "Quiet volcanic bay village with a few stone fishermen’s houses."
+  },
+  { 
+    name: "Museo del Queso Majorero",
+    tags: ["museum", "cheese", "culture", "local food"],
+    coordinates: [-14.01246, 28.43112],
+    description: "Museum dedicated to the island’s famous goat cheese."
+  },
+  { 
+    name: "Las Playitas",
+    tags: ["village", "resort", "coastal", "relaxing"],
+    coordinates: [-13.98474, 28.23209],
+    description: "A pretty fishing village turned into a small holiday resort."
+  },
+  { 
+    name: "Mirador de Guise y Ayose",
+    tags: ["viewpoint", "statues", "history", "scenic"],
+    coordinates: [-14.05644, 28.44088],
+    description: "Statues of ancient kings overlooking Betancuria valley"
+  },
+  { 
+    name: "Oasis Wildlife Fuerteventura",
+    tags: ["zoo", "animals", "family", "gardens", "wildlife"],
+    coordinates: [-14.15706, 28.18734],
+    description: "A beautifully kept animal park where you can see everything from giraffes to sea lions, wander through cactus gardens, and even feed some of the animals! Bring comfy shoes, water, and take your time exploring."
+  },
+  { 
+    name: "Faro de Tostón",
+    tags: ["lighthouse", "coast", "viewpoint", "walking"],
+    coordinates: [-14.01381, 28.71544],
+    description: "A lighthouse close to El Cotillo, offering a gorgeous sea viewpoint and a coastal path."
+  },
+  { 
+    name: "Las Rotondas Shopping Centre",
+    tags: ["shopping", "centre", "indoor"],
+    coordinates: [-13.86354, 28.49625],
+    description: "A large shopping centre not too far from Puerto del Rosario, with a great range of high-street style shops."
+  },
+  { 
+    name: "Morro Jable",
+    tags: ["resort", "beach", "restaurants", "bars"],
+    coordinates: [-14.34792, 28.04926],
+    description: "A lovely resort with huge, white sandy beaches, great restaurants and bars, and a brilliant atmosphere."
+  },
+  { 
+    name: "Iglesia de las Salinas del Carmen",
+    tags: ["church", "village", "historic", "scenic"],
+    coordinates: [-13.87256, 28.36424],
+    description: "A small but absolutely stunning little church in the village of las Salinas del Carmen. Definitely worth stopping by if you're in the area."
+  },
+  { 
+    name: "Corralejo town",
+    tags: ["town", "resort", "beaches", "food", "markets"],
+    coordinates: [-13.86335, 28.72815],
+    description: "One of, if not the most, popular resorts on the island. Nature, markets, culture, beaches, food and drink, it has it all!! A great base for any visitor."
+  },
+  { 
+    name: "Castillo Caleta de Fuste",
+    tags: ["resort", "centre", "restaurants", "bars"],
+    coordinates: [-13.86382, 28.3968],
+    description: "The centre of a large resort in Fuerteventura, packed full of hotels, apartments, restaurants, and bars and of course, close to the beach."
+  },
+  { 
+    name: "Puerto del Rosario",
+    tags: ["capital", "shopping", "food", "local"],
+    coordinates: [-13.86279, 28.49979],
+    description: "The capital of the island - although it feels more like a Spanish working town than a capital city! A great place to get authentic Canarian food and do some shopping."
+  },
+  { 
+    name: "Music Square",
+    tags: ["square", "bars", "restaurants", "live music"],
+    coordinates: [-13.86772, 28.73906],
+    description: "A main square in Corralejo filled with some of the best bars and restaurants on the island, amazing atmosphere and live music."
+  },
+  { 
+    name: "Atlantico centre",
+    tags: ["shopping", "food", "seafront"],
+    coordinates: [-13.86489, 28.38618],
+    description: "A smaller commercial centre with a few shops, bars and restaurants, right on the seafront."
+  },
+  { 
+    name: "El Campanario Market Corralejo",
+    tags: ["market", "shopping", "crafts", "local"],
+    coordinates: [-13.86474, 28.72862],
+    description: "A brilliant market with a bustling atmosphere, open every day in the centre of Corralejo. On Thursdays, they offer a craft market with additional independent stalls."
+  },
+  { 
+    name: "Lighthouse Punta de Jandia",
+    tags: ["lighthouse", "museum", "viewpoint", "coastal"],
+    coordinates: [-14.50726, 28.06578],
+    description: "A lighthouse which is also home to a museum and a viewing deck for amazing panoramic sea views."
+  },
+
+  // ---------------- RESTAURANTS ----------------
+
+  { 
+    name: "Nestor's Restaurant & Steakhouse",
+    tags: ["restaurant", "steakhouse", "meat", "local favourite"],
+    coordinates: [-13.86828, 28.399],
+    description: "This is a fantastic steak restaurant in Caleta de Fuste. It’s got a really relaxed vibe, nothing fancy or pretentious, just warm, welcoming, and the food is to die for. Big portions, cooked perfectly, and you can tell the meat is good quality. Definitely book ahead if you can."
+  },
+  { 
+    name: "Restaurante Algo Más",
+    tags: ["restaurant", "mediterranean", "seafood", "pasta"],
+    coordinates: [-13.87626, 28.38055],
+    description: "Tucked away on the Las Salinas golf course, Algo Mas is a bit more refined than your usual tourist restaurant, but still feels relaxed and welcoming. It’s Mediterranean-style with a mix of seafood, meat, and pasta."
+  },
+  { 
+    name: "Los Caracolitos",
+    tags: ["restaurant", "seafood", "local", "authentic"],
+    coordinates: [-13.87249, 28.36507],
+    description: "A low-key little restaurant sitting right by the sea in the tiny old fishing village of Las Salinas. They do the freshest local fish, of course accompanied with Papas Arrugadas. Very authentic, usually filled with locals."
+  },
+  { 
+    name: "La Tahona",
+    tags: ["restaurant", "cosy", "music square"],
+    coordinates: [null, null],
+    description: "A small and cosy restaurant right by the Music Square with a really friendly vibe, good energy and nothing pretentious. The food is great and it’s the sort of spot where you end up staying longer than you planned!"
+  },
+  { 
+    name: "Bar Cafetería Aguayre",
+    tags: ["cafe", "restaurant", "local", "seafood"],
+    coordinates: [-14.0116, 28.68174],
+    description: "A laid back cafe/restaurant with local charm. There’s no fuss, just good food, friendly service, and a breeze coming in off the ocean. Their tapas and fresh fish dishes are simple but so tasty, and the atmosphere feels very real with more locals than tourists, which is always a good sign."
+  },
+  { 
+    name: "Restaurante El Mirador",
+    tags: ["restaurant", "pizza", "beach"],
+    coordinates: [-13.86323, 28.49362],
+    description: "A great spot for a pizza in Puerto del Rosario, just off the beach."
+  },
+  { 
+    name: "Central Station International Restaurant",
+    tags: ["restaurant", "international", "commercial centre"],
+    coordinates: [-13.86457, 28.38609],
+    description: "Decent restaurant in Atlantico Centro commercial with a varied menu but good quality. It might not be the most authentic Canarian food, but they’ll most likely have exactly what you fancy on the menu!"
+  },
+  { 
+    name: "El Rincón",
+    tags: ["burger", "argentinian", "casual"],
+    coordinates: [-13.8668, 28.74044],
+    description: "A really great Argentinian burger bar in Corralejo"
+  },
+  { 
+    name: "La Vela",
+    tags: ["restaurant", "seafood", "paella"],
+    coordinates: [-13.86751, 28.7367],
+    description: "Lovely restaurant on Caleta seafront specialising in fresh seafood and Paella."
+  },
+  { 
+    name: "Masala Twist Indian",
+    tags: ["restaurant", "indian", "spicy"],
+    coordinates: [-13.86, 28.4],
+    description: "A great Indian restaurant in Caleta de Fuste."
+  },
+  { 
+    name: "Bar & Restaurante Smile",
+    tags: ["restaurant", "pizza", "seafront"],
+    coordinates: [-13.86011, 28.39371],
+    description: "This is the perfect spot by the sea to sit and chill, Either just get a drink, or order from their huge selection of pizzas and other classics."
+  },
+  { 
+    name: "Amares Restaurante",
+    tags: ["restaurant", "mediterranean", "beachfront"],
+    coordinates: [-13.85992, 28.39411],
+    description: "A beachfront bar and restaurant with a wide range of Mediterranean dishes."
+  },
+  { 
+    name: "IT Different",
+    tags: ["restaurant", "italian", "fine dining"],
+    coordinates: [-13.86786, 28.39803],
+    description: "A higher-end Italian restaurant in a small commercial centre. Portions aren't huge, but the quality of the food is incredible."
+  },
+  { 
+    name: "El RInconcito de Doña Juanita",
+    tags: ["restaurant", "seafood", "coastal"],
+    coordinates: [-13.85339, 28.50002],
+    description: "A beautiful restuarant on the coast of Puerto del Rosario overlooking the sea and port."
+  },
+
+  // ---------------- BARS & CAFES ----------------
+
+  { 
+    name: "B-Side Cafe",
+    tags: ["cafe", "bar", "chilled", "cocktails"],
+    coordinates: [-14.22811, 28.1592],
+    description: "B-Side in Costa Calma has that perfect balance between chilled daytime café and fun evening bar. It’s got a nice, stylish look without feeling pretentious, and the people who work there are genuinely friendly"
+  },
+  { 
+    name: "Chiringuito La Isla",
+    tags: ["beach bar", "seafood", "tapas", "cocktails"],
+    coordinates: [-13.86119, 28.38677],
+    description: "An open-air beach bar that stretches right out into the water. They do great seafood and fresh tapas, and the cocktails are spot-on for watching the sun go down."
+  },
+  { 
+    name: "Palm Beach Club",
+    tags: ["beach bar", "cocktails", "stylish", "views"],
+    coordinates: [-13.86567, 28.73301],
+    description: "A stunning bar set right on the beach, with modern loungers, palm trees and great cocktails."
+  },
+  { 
+    name: "Back to the 80s Bar",
+    tags: ["bar", "music", "80s", "cocktails"],
+    coordinates: [-13.86103, 28.39986],
+    description: "Neon lights, classic tunes, great drinks and regular live music. A perfect fun bar."
+  },
+  { 
+    name: "El Faro Lounge Bar",
+    tags: ["bar", "harbour", "views", "cocktails"],
+    coordinates: [-13.85613, 28.39152],
+    description: "A great bar in Caleta at the harbour with great views of the harbour and beach."
+  },
+  { 
+    name: "Oliver Fly",
+    tags: ["cocktail bar", "mixology", "trendy"],
+    coordinates: [-13.85602, 28.39791],
+    description: "The best cocktails in Caleta! Huge menu including variations on classics."
+  },
+  { 
+    name: "Leo’s Beach Bar",
+    tags: ["beach bar", "cocktails", "relaxed"],
+    coordinates: [-14.01083, 28.68921],
+    description: "A lovely little bar in El Cotillo with great service and cocktails."
+  },
+  { 
+    name: "Café Gala",
+    tags: ["cafe", "breakfast", "brunch", "lunch"],
+    coordinates: [-13.86458, 28.38633],
+    description: "A coastal cafe within the Atlantico Centre with amazing breakfast, brunch and lunch options."
+  },
+  { 
+    name: "La Saranda Tropical",
+    tags: ["bar", "cocktails", "lively"],
+    coordinates: [-13.85994, 28.39953],
+    description: "A lively bar with a brilliant cocktail selection and comfy seating."
+  },
+  { 
+    name: "Hot Spot",
+    tags: ["bar", "daytime", "cocktails", "sangria"],
+    coordinates: [-13.8604, 28.39978],
+    description: "A small daytime-only kiosk offering homemade cocktails and very affordable beer."
+  },
+  { 
+    name: "View Bar",
+    tags: ["bar", "views", "cocktails"],
+    coordinates: [-13.86763, 28.39796],
+    description: "A hillside bar near Caleta offering a wide cocktail selection with a great view."
+  },
+  { 
+    name: "El Perro Loco",
+    tags: ["bar", "cocktails", "hidden gem"],
+    coordinates: [-13.87214, 28.39953],
+    description: "A hidden gem with a great atmosphere and extremely strong cocktails!"
+  }
+];
+
+const directionsLinks = {
+  "Corralejo Natural Park": "https://maps.google.com/?cid=17343520234378761588",
+  "Ajuy Caves": "https://maps.google.com/?cid=10207197486306477507",
+  "La Concha Beach": "https://maps.google.com/?cid=7261069773020111672",
+  "Cofete Beach": "https://maps.google.com/?cid=9942359118883209674",
+  "Pico de la Zarza": "https://maps.google.com/?cid=16282505797732133864",
+  "Flag Beach": "https://maps.google.com/?cid=12927961190481136330",
+  "Sotavento Beach": "https://maps.google.com/?cid=17995267127421237623",
+  "Playa del Matorral": "https://maps.google.com/?cid=1688481908867954933",
+  "Calderón Hondo Volcano": "https://maps.google.com/?cid=10546879872103992112",
+  "Playa del Castillo": "https://maps.google.com/?cid=9835381612511530430",
+  "Grandes Playas Corralejo": "https://maps.google.com/?cid=155088802763164370",
+
+  "Betancuria": "https://maps.google.com/?cid=12081879353025108352",
+  "El Cotillo": "https://maps.google.com/?cid=1165925491433395584",
+  "Lobos Island": "https://maps.google.com/?cid=12807044295134248966",
+  "Salt Museum (Museo de la Sal)": "https://maps.google.com/?cid=15165478363518551080",
+  "Gran Tarajal": "https://maps.google.com/?cid=11013224366400642115",
+  "Pozo Negro": "https://maps.google.com/?cid=12422914171959133874",
+  "Museo del Queso Majorero": "https://maps.google.com/?cid=15202776238028945367",
+  "Las Playitas": "https://maps.google.com/?cid=178887140591646017",
+  "Mirador de Guise y Ayose": "https://maps.google.com/?cid=10828473323944305913",
+  "Oasis Wildlife Fuerteventura": "https://maps.google.com/?cid=12666613348071700963",
+  "Faro de Tostón": "https://maps.google.com/?cid=8016468701087475672",
+  "Las Rotondas Shopping Centre": "https://maps.google.com/?cid=11867123310438719948",
+  "Morro Jable": "https://maps.google.com/?cid=10788287294612301152",
+  "Iglesia de las Salinas del Carmen": "https://maps.google.com/?cid=321728378050602522",
+  "Corralejo town": "https://maps.google.com/?cid=540032852566051143",
+  "Castillo Caleta de Fuste": "https://maps.google.com/?cid=11960891718301524436",
+  "Puerto del Rosario": "https://maps.google.com/?cid=12321869826453526945",
+  "Music Square": "https://maps.google.com/?cid=16126354527107332965",
+  "Atlantico centre": "https://maps.google.com/?cid=17823117361959769932",
+  "El Campanario Market Corralejo": "https://www.google.com/maps/place/Villa+Comercial+El+Campanario",
+  "Lighthouse Punta de Jandia": "https://maps.google.com/?cid=4373263427385700051",
+
+  "Nestor's Restaurant & Steakhouse": "https://maps.google.com/?cid=8817353309374103482",
+  "Restaurante Algo Más": "https://maps.google.com/?cid=17593579494996257477",
+  "Los Caracolitos": "https://maps.google.com/?cid=12164703803347531349",
+  "La Tahona": "https://maps.google.com/?cid=2400069356879892935",
+  "Bar Cafetería Aguayre": "https://maps.google.com/?cid=16780745044300208346",
+  "Restaurante El Mirador": "https://maps.google.com/?cid=3202937745630470869",
+  "Central Station International Restaurant": "https://maps.google.com/?cid=8204616425577093714",
+  "El Rincón": "https://maps.google.com/?cid=4689909854152325480",
+  "La Vela": "https://maps.google.com/?cid=2650251818535718626",
+  "Masala Twist Indian": "https://maps.google.com/?cid=11194539962815267202",
+  "Bar & Restaurante Smile": "https://maps.google.com/?cid=16053791853002295129",
+  "Amares Restaurante": "https://maps.google.com/?cid=18116249775540064701",
+  "IT Different": "https://maps.google.com/?cid=12938873157208438929",
+  "El RInconcito de Doña Juanita": "https://maps.google.com/?cid=14523614479324028328",
+
+  "B-Side Cafe": "https://maps.google.com/?cid=8080176750878055947",
+  "Chiringuito La Isla": "https://maps.google.com/?cid=6603073613518799357",
+  "Palm Beach Club": "https://maps.google.com/?cid=13527957964704610557",
+  "Back to the 80s Bar": "https://maps.google.com/?cid=13904716102131595531",
+  "El Faro Lounge Bar": "https://maps.google.com/?cid=17188545847694700957",
+  "Oliver Fly": "https://maps.google.com/?cid=16307142379733824697",
+  "Leo’s Beach Bar": "https://maps.google.com/?cid=16393529533185871679",
+  "Café Gala": "https://maps.google.com/?cid=4736510742568830081",
+  "La Saranda Tropical": "https://maps.google.com/?cid=12771291763888686875",
+  "Hot Spot": "https://maps.google.com/?cid=6357440397383704141",
+  "View Bar": "https://maps.google.com/?cid=12326956236785573327",
+  "El Perro Loco": "https://maps.google.com/?cid=17598327156945971470"
+};
+
+  const fuse = new Fuse(savedPoints, {
+    keys: ['name', 'tags'],
+    threshold: 0.4,
+    ignoreLocation: true,
+    includeScore: true
+  });
+
+  const searchInput = document.getElementById('search');
+  const suggestionsDiv = document.getElementById('suggestions');
+  let currentPopup = null;
+  let allFeatures = [];
+  let popupOpenedByClick = false
+  let popupHovering = false;
+
+  function isMobile() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
+function createPopup(feature, lngLat, clicked = false) {
+  // remove any existing popup
+  if (currentPopup) {
+    currentPopup.remove();
+    currentPopup = null;
+  }
+
+  // set whether this popup is "locked" by a click
+  popupOpenedByClick = clicked;
+  // reset hover flag
+  popupHovering = false;
+
+  const name = feature.properties?.name || feature.properties?.Name || feature.properties?.title || "No title";
+  const description = feature.properties?.description || feature.properties?.Description || "No description";
+  const directions = directionsLinks[name] || `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
+
+  currentPopup = new mapboxgl.Popup({ closeButton: false })
+    .setLngLat(lngLat)
+    .setHTML(`
+      <div class="custom-popup">
+        <strong>${name}</strong>
+        <p>${description}</p>
+        <a href="${directions}" class="directions-btn" target="_blank">
+          <span>📍</span> <span>Directions</span>
+        </a>
+      </div>
+    `)
+    .addTo(map);
+
+  // Popup DOM hover handlers — keep popup open while mouse is over it
+  const popupEl = document.querySelector(".mapboxgl-popup");
+  if (popupEl) {
+    popupEl.addEventListener("mouseenter", () => {
+      popupHovering = true;
+    });
+    popupEl.addEventListener("mouseleave", () => {
+      popupHovering = false;
+      // close only if not locked by click
+      if (!popupOpenedByClick && currentPopup) {
+        currentPopup.remove();
+        currentPopup = null;
+      }
+    });
+  }
+}
+
+function searchAndZoomToFeature(name) {
+  const lowerName = name.toLowerCase();
+
+  // 1️⃣ First: check all loaded features (includes description)
+  for (let feature of allFeatures) {
+    const featureName =
+      feature.properties?.name ||
+      feature.properties?.Name ||
+      feature.properties?.title;
+
+    if (featureName && featureName.toLowerCase().includes(lowerName)) {
+      const coords = feature.geometry.coordinates;
+      map.flyTo({ center: coords, zoom: 17 });
+
+      setTimeout(() => createPopup(feature, coords, true), 300);
+      return;
+    }
+  }
+
+  // 2️⃣ If not found, check currently rendered features (backup)
+  const rendered = map.queryRenderedFeatures();
+  for (let feature of rendered) {
+    const featureName =
+      feature.properties?.name ||
+      feature.properties?.Name ||
+      feature.properties?.title;
+
+    if (featureName && featureName.toLowerCase().includes(lowerName)) {
+      const coords = feature.geometry.coordinates;
+      map.flyTo({ center: coords, zoom: 17 });
+
+      setTimeout(() => createPopup(feature, coords, true), 300);
+      return;
+    }
+  }
+
+// 3️⃣ Use savedPoints (guaranteed list with coords)
+const matchingPoint = savedPoints.find(p => p.name.toLowerCase().includes(lowerName));
+if (matchingPoint) {
+  if (matchingPoint.coordinates) {
+    const directions = directionsLinks[matchingPoint.name] || `https://www.google.com/maps/search/${encodeURIComponent(matchingPoint.name)}`;
+    map.flyTo({ center: matchingPoint.coordinates, zoom: 17 });
+    setTimeout(() => {
+      currentPopup = new mapboxgl.Popup({ closeButton: false })
+        .setLngLat(matchingPoint.coordinates)
+        .setHTML(`
+          <div class="custom-popup">
+            <strong>${matchingPoint.name}</strong>
+            <p>${matchingPoint.description || ''}</p>
+            <a href="${directions}" class="directions-btn" target="_blank">
+              <span>📍</span> <span>Directions</span>
+            </a>
+          </div>
+        `)
+        .addTo(map);
+    }, 300);
+  } else {
+    alert('"' + matchingPoint.name + '": Coordinates not available.');
+  }
+  return;
+}
+}
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim();
+    suggestionsDiv.innerHTML = '';
+    if (!query) {
+      savedPoints.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'suggestion';
+        div.textContent = item.name;
+        div.onclick = () => {
+          searchInput.value = item.name;
+          suggestionsDiv.innerHTML = '';
+          searchAndZoomToFeature(item.name);
+        };
+        suggestionsDiv.appendChild(div);
+      });
+      return;
+    }
+    const results = fuse.search(query);
+    if (results.length) {
+      results.forEach(({ item }) => {
+        const div = document.createElement('div');
+        div.className = 'suggestion';
+        div.textContent = item.name;
+        div.onclick = () => {
+          searchInput.value = item.name;
+          suggestionsDiv.innerHTML = '';
+          searchAndZoomToFeature(item.name);
+        };
+        suggestionsDiv.appendChild(div);
+      });
+    } else {
+      const div = document.createElement('div');
+      div.className = 'no-results';
+      div.textContent = "Can't find what you're looking for? It must not be somewhere we've tried & tested for you yet! Why not try a Google Search instead?";
+      suggestionsDiv.appendChild(div);
+    }
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const query = searchInput.value.trim();
+      const result = fuse.search(query)[0];
+      if (result) {
+        searchAndZoomToFeature(result.item.name);
+        suggestionsDiv.innerHTML = '';
+      }
+    }
+  });
+
+  searchInput.addEventListener('focus', () => searchInput.dispatchEvent(new Event('input')));
+
+  document.addEventListener('click', function (event) {
+    const isClickInside = searchInput.contains(event.target) || suggestionsDiv.contains(event.target);
+    if (!isClickInside) {
+      suggestionsDiv.innerHTML = '';
+    }
+  });
+
+  map.on('load', () => {
+    const layers = ['sightseeing', 'restaurants', 'bars', 'beaches'];
+    const layerCheckboxes = {
+  sightseeing: document.getElementById('toggle-sightseeing'),
+  restaurants: document.getElementById('toggle-restaurants'),
+  bars: document.getElementById('toggle-bars'),
+  beaches: document.getElementById('toggle-beaches')
+};
+    const layerToSourceLayer = {
+      'sightseeing': 'fuesightseeing-9lz18h',
+      'restaurants': 'fuerest-bzbq4w',
+      'bars': 'fuebar-99nnvq',
+      'beaches': 'fuebeach-0idtey'
+    };
+    const sourceId = 'composite';
+
+    function loadAllFeatures() {
+      layers.forEach(layer => {
+        const sourceLayer = layerToSourceLayer[layer];
+        try {
+          const sourceFeatures = map.querySourceFeatures(sourceId, {
+            sourceLayer: sourceLayer
+          });
+          sourceFeatures.forEach(feature => {
+            const isDuplicate = allFeatures.some(existing => 
+              existing.properties && feature.properties &&
+              existing.properties.name === feature.properties.name
+            );
+            if (!isDuplicate && feature.properties && feature.properties.name) {
+              allFeatures.push(feature);
+            }
+          });
+        } catch (error) {
+          const renderedFeatures = map.queryRenderedFeatures({ layers: [layer] });
+          renderedFeatures.forEach(feature => {
+            const isDuplicate = allFeatures.some(existing => 
+              existing.properties && feature.properties &&
+              existing.properties.name === feature.properties.name
+            );
+            if (!isDuplicate && feature.properties && feature.properties.name) {
+              allFeatures.push(feature);
+            }
+          });
+     }
+      });
+    }
+
+    map.on('data', (e) => {
+      if (e.dataType === 'source' && e.sourceId === sourceId) {
+        allFeatures = [];
+        loadAllFeatures();
+      }
+    });
+
+    map.once('idle', () => {
+      if (allFeatures.length === 0) {
+        loadAllFeatures();
+      }
+    });
+Object.entries(layerCheckboxes).forEach(([layerId, checkbox]) => {
+  if (!checkbox) return;
+
+  checkbox.addEventListener('change', (e) => {
+    const visibility = e.target.checked ? 'visible' : 'none';
+
+    if (map.getLayer(layerId)) {
+      map.setLayoutProperty(layerId, 'visibility', visibility);
+    } else {
+      console.warn(`Layer not found: ${layerId}`);
+    }
+  });
+});
+if (!isMobile()) {
+  layers.forEach(layer => {
+    // Hover: show popup (not locked)
+    map.on('mouseenter', layer, e => {
+      map.getCanvas().style.cursor = 'pointer';
+      createPopup(e.features[0], e.lngLat, false);
+    });
+
+    // When leaving the marker: wait a short tick and only close if
+    // not hovering the popup and not clicked (locked)
+    map.on('mouseleave', layer, () => {
+      map.getCanvas().style.cursor = '';
+      setTimeout(() => {
+        if (!popupOpenedByClick && !popupHovering && currentPopup) {
+          currentPopup.remove();
+          currentPopup = null;
+        }
+      }, 40); // tiny delay to allow mouse to enter popup
+    });
+
+    // Click on marker: open popup and lock it (until clicking map background)
+    map.on('click', layer, e => {
+      if (currentPopup) currentPopup.remove();
+      createPopup(e.features[0], e.lngLat, true);
+    });
+  });
+}else {
+    // Mobile: only click to open popup (no hover)
+    layers.forEach(layer => {
+        map.on('click', layer, e => {
+        if (currentPopup) currentPopup.remove();
+        createPopup(e.features[0], e.lngLat, true);
+        });
+    });
+}
+    // Click on map background: close any open popup
+    map.on('click', (e) => {
+      const features = map.queryRenderedFeatures(e.point, { layers: layers });
+      if (features.length === 0 && currentPopup) {
+        currentPopup.remove();
+        currentPopup = null;
+        popupOpenedByClick = false;
+      }
+    });
+  });
+}
+</script>
+</body>
+</html> 
